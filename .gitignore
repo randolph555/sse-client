@@ -1,0 +1,38 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Keep go.mod and go.sum for dependency version control
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build directory
+build/
+
+# Environment files
+.env
+
+# Config files
+config.yaml
+
+# macOS specific
+.DS_Store
