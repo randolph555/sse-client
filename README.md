@@ -38,12 +38,10 @@
 
 ```bash
 # macOS / Linux / Windows
-curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/install.sh | bash
-
-
+curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts/install.sh | bash
 
 # Windows (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/randolph555/sse-client/releases/latest/download/sse-windows-amd64.exe" -OutFile "sse.exe"
+Invoke-WebRequest -Uri "https://github.com/randolph555/sse-client/releases/latest/download/sse-windows-amd64.zip" -OutFile "sse.zip"
 ```
 # SSE Client
 

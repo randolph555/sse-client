@@ -71,13 +71,12 @@ detect_platform() {
             ;;
     esac
     
-    if [ "$OS" = "windows" ]; then
-        PLATFORM="${OS}-${ARCH}"
+    PLATFORM="${OS}-${ARCH}"
+    if [[ "$OS" == "windows" ]]; then
         BINARY_NAME="sse.exe"
-        DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/sse-${PLATFORM}.exe"
+        DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/sse-${PLATFORM}.zip"
     else
-        PLATFORM="${OS}-${ARCH}"
-        DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/sse-${PLATFORM}"
+        DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/sse-${PLATFORM}.tar.gz"
     fi
 }
 
