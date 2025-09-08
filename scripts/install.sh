@@ -183,10 +183,10 @@ install_sse() {
             cd "$temp_dir"
             if [ "$OS" = "windows" ]; then
                 unzip -q "$archive_file"
-                source_file="$temp_dir/sse.exe"
+                source_file="$temp_dir/sse-${OS}-${ARCH}.exe"
             else
                 tar xzf "$archive_file"
-                source_file="$temp_dir/sse"
+                source_file="$temp_dir/sse-${OS}-${ARCH}"
             fi
             
             if [ ! -f "$source_file" ]; then
