@@ -36,7 +36,7 @@ jobs:
       run: make release
     
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: sse-client-binaries
         path: dist/
