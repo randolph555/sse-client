@@ -31,6 +31,7 @@ build-all:
 	
 	# FreeBSD
 	GOOS=freebsd GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o $(DIST_DIR)/$(BINARY_NAME)-freebsd-amd64 ./cmd/
+	GOOS=freebsd GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o $(DIST_DIR)/$(BINARY_NAME)-freebsd-arm64 ./cmd/
 	
 	@echo "✅ Cross-platform build completed!"
 	@ls -la $(DIST_DIR)/

@@ -72,7 +72,7 @@ detect_platform() {
     esac
     
     PLATFORM="${OS}-${ARCH}"
-    if [[ "$OS" == "windows" ]]; then
+    if [ "$OS" = "windows" ]; then
         BINARY_NAME="sse.exe"
         DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/sse-${PLATFORM}.zip"
     else
@@ -164,30 +164,46 @@ install_sse() {
     
     # 检查是否有本地构建的文件（用于测试）
     local source_file=""
-    if [ -f "./sse" ]; then
-        source_file="./sse"
-        echo -e "${YELLOW}🔧 检测到本地构建文件，使用本地版本${NC}"
-    elif [ -f "./build/sse" ]; then
+    local temp_dir=$(mktemp -d)
+    
+    if [ -f "./build/sse" ]; then
         source_file="./build/sse"
         echo -e "${YELLOW}🔧 检测到本地构建文件，使用本地版本${NC}"
     else
-        # 创建临时文件用于下载
-        source_file=$(mktemp)
+        # 下载压缩包
+        local archive_file="$temp_dir/sse.archive"
         echo -e "   下载: ${DOWNLOAD_URL}"
         echo -e "${BLUE}📥 正在下载...${NC}"
-        if $DOWNLOAD_CMD "$source_file" "$DOWNLOAD_URL"; then
+        
+        if $DOWNLOAD_CMD "$archive_file" "$DOWNLOAD_URL"; then
             echo -e "${GREEN}✅ 下载完成${NC}"
+            echo -e "${BLUE}📦 正在解压...${NC}"
+            
+            # 解压文件
+            cd "$temp_dir"
+            if [ "$OS" = "windows" ]; then
+                unzip -q "$archive_file"
+                source_file="$temp_dir/sse.exe"
+            else
+                tar xzf "$archive_file"
+                source_file="$temp_dir/sse"
+            fi
+            
+            if [ ! -f "$source_file" ]; then
+                echo -e "${RED}❌ 解压失败${NC}"
+                rm -rf "$temp_dir"
+                exit 1
+            fi
+            
+            chmod +x "$source_file"
+            echo -e "${GREEN}✅ 解压完成${NC}"
         else
             echo -e "${RED}❌ 下载失败${NC}"
             echo -e "${YELLOW}💡 可能的原因:${NC}"
-            echo -e "   1. 网络连接问题"
-            echo -e "   2. GitHub 访问受限"
-            echo -e "   3. 发布版本不存在"
-            echo -e "${YELLOW}💡 解决方案:${NC}"
             echo -e "   1. 检查网络连接"
             echo -e "   2. 使用代理或 VPN"
-            echo -e "   3. 手动下载: ${DOWNLOAD_URL}"
-            rm -f "$source_file"
+            echo -e "   3. 发布版本不存在"
+            rm -rf "$temp_dir"
             exit 1
         fi
     fi
@@ -204,66 +220,32 @@ install_sse() {
         cp "$source_file" "$target_path"
         chmod +x "$target_path"
     fi
-    
-    # 如果是临时下载的文件，清理它
-    if [[ "$source_file" == /tmp/* ]]; then
-        rm -f "$source_file"
-    fi
-    
+
+    # 清理临时文件
+    rm -rf "$temp_dir"
+
     echo -e "${GREEN}✅ SSE Client 安装成功！${NC}"
-    
-    # 检查 PATH
-    check_path
-}
-
-# 检查 PATH 设置
-check_path() {
-    if [ "$OS" != "windows" ] && [ "$INSTALL_DIR" != "/usr/local/bin" ]; then
-        if ! echo "$PATH" | grep -q "$INSTALL_DIR"; then
-            echo -e "${YELLOW}⚠️  需要将 $INSTALL_DIR 添加到 PATH${NC}"
-            echo -e "${YELLOW}💡 运行以下命令:${NC}"
-            case $SHELL in
-                */zsh)
-                    echo -e "   echo 'export PATH=\"$INSTALL_DIR:\$PATH\"' >> ~/.zshrc"
-                    echo -e "   source ~/.zshrc"
-                    ;;
-                */bash)
-                    echo -e "   echo 'export PATH=\"$INSTALL_DIR:\$PATH\"' >> ~/.bashrc"
-                    echo -e "   source ~/.bashrc"
-                    ;;
-                *)
-                    echo -e "   export PATH=\"$INSTALL_DIR:\$PATH\""
-                    ;;
-            esac
-            echo ""
-        fi
-    fi
-}
-
-# 显示使用说明
-show_usage() {
     echo -e "${GREEN}🎉 安装完成！${NC}"
+
+    # 显示使用说明
     echo -e "\n${BLUE}📖 快速开始:${NC}"
-    echo -e "   ${YELLOW}# 1. 设置 API 密钥（选择一个）:${NC}"
+    echo -e "   # 1. 设置 API 密钥（选择一个）:"
     echo -e "   export OPENAI_API_KEY=\"your-key\""
+    echo -e "   export ANTHROPIC_API_KEY=\"your-key\""
     echo -e "   export BAILIAN_API_KEY=\"your-key\""
     echo -e "   export DEEPSEEK_API_KEY=\"your-key\""
     echo -e "   export GOOGLE_API_KEY=\"your-key\""
-    echo -e ""
-    echo -e "   ${YELLOW}# 2. 测试安装:${NC}"
-    echo -e "   sse test"
-    echo -e ""
-    echo -e "   ${YELLOW}# 3. 开始使用:${NC}"
+    echo -e "\n   # 2. 测试配置:"
+    echo -e "   sse config"
+    echo -e "\n   # 3. 开始使用:"
     echo -e "   sse \"你好，请介绍一下自己\""
     echo -e "   sse -c \"查看系统状态\""
     echo -e "   sse \"总结文档\" -f README.md"
-    echo -e ""
-    echo -e "${BLUE}📚 更多信息:${NC}"
+    echo -e "\n${BLUE}📚 更多信息:${NC}"
     echo -e "   sse --help"
     echo -e "   sse list"
     echo -e "   https://github.com/${REPO}"
-    echo -e ""
-    echo -e "${GREEN}🚀 让 AI 成为你的终端超能力！${NC}"
+    echo -e "\n${GREEN}🚀 让 AI 成为你的终端超能力！${NC}"
 }
 
 # 主函数
@@ -273,7 +255,7 @@ main() {
     get_download_cmd
     determine_install_dir
     install_sse
-    show_usage
 }
 
+# 执行主函数
 main "$@"
