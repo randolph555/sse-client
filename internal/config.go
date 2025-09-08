@@ -50,6 +50,9 @@ func loadConfig(configFile string) error {
 	// 从环境变量加载配置，覆盖文件配置
 	loadFromEnvironment()
 
+	// 确保所有provider都有默认模型配置
+	ensureDefaultModels()
+
 	return nil
 }
 
@@ -65,7 +68,8 @@ func findConfigFile(specifiedFile string) string {
 
 	// 按优先级搜索配置文件
 	searchPaths := []string{
-		"./config.yaml", // 当前目录
+		"./config.yaml",         // 当前目录
+		"./configs/config.yaml", // 项目配置目录
 		os.ExpandEnv("$HOME/.config/sse-client/config.yaml"), // 用户配置目录
 		"/etc/sse-client/config.yaml",                        // 系统配置目录
 	}
@@ -117,6 +121,28 @@ func loadFromEnvironment() {
 				existingConfig.Models = getDefaultModels(provider)
 			}
 
+			config.Providers[provider] = existingConfig
+		}
+	}
+}
+
+// 确保所有provider都有默认模型配置（即使没有API key）
+func ensureDefaultModels() {
+	if config.Providers == nil {
+		config.Providers = make(map[string]ProviderConfig)
+	}
+
+	providers := []string{"bailian", "openai", "google", "anthropic", "deepseek"}
+	for _, provider := range providers {
+		existingConfig, exists := config.Providers[provider]
+		if !exists {
+			// 创建默认配置，包含模型列表但没有API key
+			config.Providers[provider] = ProviderConfig{
+				Models: getDefaultModels(provider),
+			}
+		} else if len(existingConfig.Models) == 0 {
+			// 如果存在但没有模型列表，添加默认模型
+			existingConfig.Models = getDefaultModels(provider)
 			config.Providers[provider] = existingConfig
 		}
 	}

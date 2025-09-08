@@ -31,7 +31,24 @@ func createListCmd() *cobra.Command {
 
 // ListModels 列出所有支持的模型
 func ListModels(cmd *cobra.Command, args []string) {
-	// 实现列出模型的逻辑
+	if err := loadConfig(""); err != nil {
+		fmt.Printf("Error loading config | 配置加载错误: %v\n", err)
+		return
+	}
+
+	fmt.Println("Available Models | 可用模型:")
+	fmt.Println()
+
+	providers := []string{"bailian", "openai", "google", "anthropic", "deepseek"}
+	for _, provider := range providers {
+		if cfg, exists := getProviderConfig(provider); exists && len(cfg.Models) > 0 {
+			fmt.Printf("📦 %s:\n", strings.ToUpper(provider))
+			for _, model := range cfg.Models {
+				fmt.Printf("  • %s\n", model)
+			}
+			fmt.Println()
+		}
+	}
 }
 
 func createTestCmd() *cobra.Command {
@@ -110,27 +127,6 @@ Examples | 示例:
   sse "识别画面内容" -i image.jpg                          # Use default with image | 使用默认模型处理图片`,
 		Args: cobra.ExactArgs(3),
 		Run:  setDefault,
-	}
-}
-
-func listModels(cmd *cobra.Command, args []string) {
-	if err := loadConfig(appConfig.CfgFile); err != nil {
-		fmt.Printf("Error loading config | 配置加载错误: %v\n", err)
-		os.Exit(1)
-	}
-
-	fmt.Println("Supported models by provider | 按提供商支持的模型:")
-	fmt.Println()
-
-	providers := []string{"bailian", "openai", "google", "anthropic", "deepseek"}
-	for _, provider := range providers {
-		if cfg, exists := getProviderConfig(provider); exists {
-			fmt.Printf("%s:\n", provider)
-			for _, model := range cfg.Models {
-				fmt.Printf("  - %s\n", model)
-			}
-			fmt.Println()
-		}
 	}
 }
 
@@ -251,52 +247,6 @@ func setDefault(cmd *cobra.Command, args []string) {
 	fmt.Printf("现在您可以使用: sse \"您的消息\"\n")
 }
 
-func testProvider(cmd *cobra.Command, args []string) {
-	if err := loadConfig(appConfig.CfgFile); err != nil {
-		fmt.Printf("Error loading config | 配置加载错误: %v\n", err)
-		os.Exit(1)
-	}
-
-	if len(args) == 0 {
-		// 简单的配置测试
-		fmt.Println("🧪 Testing configuration | 测试配置...")
-		fmt.Println()
-
-		providers := []string{"bailian", "openai", "google", "anthropic", "deepseek"}
-		client := NewSSEClient()
-		for _, provider := range providers {
-			if _, exists := getProviderConfig(provider); exists {
-				if client.IsProviderConfigured(provider) {
-					fmt.Printf("✅ %s: API key configured | API key 已配置\n", provider)
-				} else {
-					fmt.Printf("⚠️  %s: API key not configured | API key 未配置\n", provider)
-				}
-			} else {
-				fmt.Printf("❌ %s: Provider not configured | 提供商未配置\n", provider)
-			}
-		}
-		fmt.Println()
-		fmt.Println("💡 Tip | 提示: Configure API keys in config.yaml to use real providers")
-		fmt.Println("💡 提示: 在 config.yaml 中配置 API key 以使用真实提供商")
-	} else {
-		provider := args[0]
-		fmt.Printf("🧪 Testing %s provider configuration | 测试 %s 提供商配置...\n", provider, provider)
-
-		if cfg, exists := getProviderConfig(provider); exists {
-			fmt.Printf("✅ Provider configured | 提供商已配置\n")
-			fmt.Printf("📍 Base URL: %s\n", cfg.BaseURL)
-			if cfg.APIKey != "" {
-				fmt.Printf("🔑 API Key: configured (***%s)\n", cfg.APIKey[len(cfg.APIKey)-4:])
-			} else {
-				fmt.Printf("⚠️  API Key: not configured\n")
-			}
-			fmt.Printf("📋 Models: %d available\n", len(cfg.Models))
-		} else {
-			fmt.Printf("❌ Provider not found | 提供商未找到: %s\n", provider)
-			fmt.Println("Available providers | 可用提供商: bailian, openai, google, anthropic, deepseek")
-		}
-	}
-}
 func createEnvCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "env",

@@ -18,16 +18,10 @@ type Provider interface {
 }
 
 func NewSSEClient() *SSEClient {
-	// 将配置传递给 providers 包
-	providers.SetConfig(providers.Config{
-		Providers: make(map[string]providers.ProviderConfig),
-	})
-
-	// 如果有全局配置，设置它
-	globalConfig := providers.GetConfig()
-	if globalConfig.Providers != nil {
+	// 将当前配置传递给 providers 包
+	if config != nil && config.Providers != nil {
 		providerConfigs := make(map[string]providers.ProviderConfig)
-		for name, cfg := range globalConfig.Providers {
+		for name, cfg := range config.Providers {
 			providerConfigs[name] = providers.ProviderConfig{
 				APIKey:  cfg.APIKey,
 				BaseURL: cfg.BaseURL,
@@ -36,6 +30,11 @@ func NewSSEClient() *SSEClient {
 		}
 		providers.SetConfig(providers.Config{
 			Providers: providerConfigs,
+		})
+	} else {
+		// 如果没有配置文件，使用环境变量
+		providers.SetConfig(providers.Config{
+			Providers: make(map[string]providers.ProviderConfig),
 		})
 	}
 

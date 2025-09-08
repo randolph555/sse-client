@@ -232,19 +232,6 @@ func handleCommandExecution(client *SSEClient, provider, model, message, imagePa
 	return nil
 }
 
-// handleFileAnalysis 处理文件分析模式（直接分析文件内容，不生成命令）
-func handleFileAnalysis(client *SSEClient, provider, model, message, imagePath string, temperature float64, maxTokens, timeout int) error {
-	// 直接使用流式响应进行文件内容分析
-	return client.StreamWithProvider(provider, model, message, imagePath, temperature, maxTokens, timeout)
-}
-
-// handlePipeAnalysis 处理管道输入分析模式（用户自己执行了命令，分析命令输出结果）
-func handlePipeAnalysis(client *SSEClient, provider, model, message, imagePath string, temperature float64, maxTokens, timeout int) error {
-	// 直接使用流式响应进行数据分析，不生成命令
-	// 这里的 message 已经包含了管道输入的数据和用户的分析请求
-	return client.StreamWithProvider(provider, model, message, imagePath, temperature, maxTokens, timeout)
-}
-
 // handleNormalConversation 处理普通对话模式（默认模式：纯对话，不生成命令）
 func handleNormalConversation(client *SSEClient, provider, model, message, imagePath string, temperature float64, maxTokens, timeout int) error {
 	// 直接使用流式响应进行对话，不修改消息内容
