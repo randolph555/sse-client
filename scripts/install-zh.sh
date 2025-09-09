@@ -115,7 +115,6 @@ download_files() {
     fi
     
     chmod +x "$binary_file"
-    echo "$binary_file"
     return 0
 }
 
@@ -221,12 +220,13 @@ main() {
         source_file="./build/sse"
         echo -e "${YELLOW}🔧 使用本地构建文件${NC}"
     else
-        source_file=$(download_files "$temp_dir")
-        if [ $? -ne 0 ] || [ ! -f "$source_file" ]; then
+        if download_files "$temp_dir"; then
+            source_file="$temp_dir/sse-binary"
+            echo -e "${GREEN}✅ 下载完成${NC}"
+        else
             echo -e "${RED}❌ 下载失败${NC}"
             exit 1
         fi
-        echo -e "${GREEN}✅ 下载完成${NC}"
     fi
     
     install_files "$source_file" "$temp_dir"
