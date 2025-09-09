@@ -53,9 +53,9 @@ check_dependencies() {
     
     # 选择下载工具
     if command -v curl >/dev/null 2>&1; then
-        DOWNLOAD_CMD="curl -L -f -o"
+        DOWNLOAD_TOOL="curl"
     else
-        DOWNLOAD_CMD="wget -O"
+        DOWNLOAD_TOOL="wget"
     fi
 }
 
@@ -79,13 +79,24 @@ download_files() {
     
     echo -e "${BLUE}📥 Downloading binary...${NC}"
     local binary_file="$temp_dir/sse-binary"
-    if ! $DOWNLOAD_CMD "$binary_file" "$binary_url" 2>/dev/null; then
-        echo -e "${RED}❌ Binary download failed${NC}"
-        return 1
+    if [ "$DOWNLOAD_TOOL" = "curl" ]; then
+        if ! curl -L -f -o "$binary_file" "$binary_url" 2>/dev/null; then
+            echo -e "${RED}❌ Binary download failed${NC}"
+            return 1
+        fi
+    else
+        if ! wget -O "$binary_file" "$binary_url" 2>/dev/null; then
+            echo -e "${RED}❌ Binary download failed${NC}"
+            return 1
+        fi
     fi
     
     echo -e "${BLUE}📥 Downloading config file...${NC}"
-    $DOWNLOAD_CMD "$temp_dir/config.yaml" "$config_url" 2>/dev/null || true
+    if [ "$DOWNLOAD_TOOL" = "curl" ]; then
+        curl -L -f -o "$temp_dir/config.yaml" "$config_url" 2>/dev/null || true
+    else
+        wget -O "$temp_dir/config.yaml" "$config_url" 2>/dev/null || true
+    fi
     
     chmod +x "$binary_file"
     echo "$binary_file"
