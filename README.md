@@ -39,58 +39,33 @@ curl -fsSL http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-
 curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts/install.sh | bash
 ```
 
-### 🚀 直接下载（无需等待CI构建）
-
-如果GitHub Actions构建排队，可以直接下载预构建的二进制文件：
-
-```bash
-# Linux AMD64 (推荐)
-curl -fsSL http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-client/main/dist/sse-linux-amd64 -o sse
-chmod +x sse && sudo mv sse /usr/local/bin/
-
-# 配置文件
-curl -fsSL http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-client/main/dist/sse-configs.tar.gz | tar -xz
-sudo mv sse-configs /usr/local/bin/
-
-# macOS ARM64 (Apple Silicon)
-curl -fsSL http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-client/main/dist/sse-darwin-arm64 -o sse
-chmod +x sse && sudo mv sse /usr/local/bin/
-
-# Windows AMD64 (PowerShell)
-Invoke-WebRequest -Uri "http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-client/main/dist/sse-windows-amd64.exe" -OutFile "sse.exe"
-```
-
-**预构建版本特点：**
-- ✅ 静态链接，解决GLIBC兼容性问题
-- ✅ 包含完整配置文件
-- ✅ 立即可用，无需等待CI构建
-- ✅ 与Release版本完全一致
-
 ### 手动安装
 
-1. 从 [Releases](https://github.com/randolph555/sse-client/releases) 下载对应平台的二进制文件
-2. 解压并移动到 PATH 目录：
-   ```bash
-   # Linux/macOS 示例
-   wget https://github.com/randolph555/sse-client/releases/latest/download/sse-linux-amd64.tar.gz
-   tar -xzf sse-linux-amd64.tar.gz
-   sudo mv sse-linux-amd64 /usr/local/bin/sse
-   
-   # Windows 示例
-   # 下载 sse-windows-amd64.zip，解压后将 sse-windows-amd64.exe 重命名为 sse.exe
-   # 并添加到 PATH 环境变量
-   ```
+**方式1：从Releases下载**
+```bash
+# 从GitHub Releases下载最新版本
+wget https://github.com/randolph555/sse-client/releases/latest/download/sse-linux-amd64.tar.gz
+tar -xzf sse-linux-amd64.tar.gz && sudo mv sse-linux-amd64 /usr/local/bin/sse
+```
 
-### 可用的预编译版本
+**方式2：直接下载预构建版本**
+```bash
+# 如果GitHub Actions排队，可直接下载预构建文件（国内加速）
+curl -fsSL http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-client/main/dist/sse-linux-amd64 -o sse
+chmod +x sse && sudo mv sse /usr/local/bin/
+```
 
-当前发布版本包含以下平台的二进制文件：
-- `sse-linux-amd64.tar.gz` - Linux x86_64
-- `sse-linux-arm64.tar.gz` - Linux ARM64  
-- `sse-darwin-amd64.tar.gz` - macOS Intel
-- `sse-darwin-arm64.tar.gz` - macOS Apple Silicon
-- `sse-windows-amd64.zip` - Windows x86_64
-- `sse-windows-arm64.zip` - Windows ARM64
-- `sse-freebsd-amd64.tar.gz` - FreeBSD x86_64
+### 卸载
+
+```bash
+# 使用卸载脚本（推荐）
+curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts/uninstall.sh | bash
+
+# 手动卸载
+sudo rm -f /usr/local/bin/sse
+sudo rm -rf /usr/local/bin/sse-configs
+```
+
 
 ## ⚡ 快速开始
 
@@ -204,7 +179,7 @@ sse test openai         # 测试提供商配置
 ### 参数调整
 ```bash
 # 调整创造性
-sse "写一首诗" --temperature 1.2
+sse "写一首诗" --temperature 0.8
 
 # 限制输出长度
 sse "简单解释" --max-tokens 200
@@ -279,12 +254,7 @@ go run ./cmd/ "你的问题"
 - **压缩包**: ~2.7-2.9MB (.tar.gz)
 - **启动时间**: ~30ms (实测)
 
-### 支持平台
-经过 Go 工具链验证：
-- **Linux**: amd64, arm64
-- **macOS**: amd64 (Intel), arm64 (Apple Silicon)  
-- **Windows**: amd64, arm64
-- **FreeBSD**: amd64, arm64
+
 
 
 ## 🏗️ 项目架构
@@ -367,12 +337,4 @@ curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts
 - CI配置 (`.github/workflows/**`)
 
 文档更新（如README.md）不再触发不必要的构建，节省CI资源。
-
-
-## 📝 更新日志
-
-- 修复了Linux安装脚本路径问题
-- 优化了CI触发条件，避免文档更新触发构建
-- 两个安装脚本(install.sh和install-zh.sh)保持完全一致
-
 
