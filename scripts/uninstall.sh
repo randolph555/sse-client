@@ -177,7 +177,7 @@ main() {
                 echo -e "  $0 -f -c              强制卸载并删除配置"
                 echo -e ""
                 echo -e "通过管道使用:"
-                echo -e "  curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts/uninstall.sh | bash -s -- -f"
+                echo -e "  curl -fsSL http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-client/main/scripts/uninstall.sh | bash -s -- -f"
                 exit 0
                 ;;
             *)
@@ -192,10 +192,11 @@ main() {
     echo -e "${YELLOW}⚠️  这将删除 SSE Client 及其相关文件${NC}"
     
     # 检查是否通过管道执行（stdin不是终端）
-    if [ ! -t 0 ] && [ "$force" = false ]; then
-        echo -e "${YELLOW}💡 检测到通过管道执行，使用 -f 参数强制卸载：${NC}"
-        echo -e "   curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts/uninstall.sh | bash -s -- -f"
-        exit 1
+    if [ ! -t 0 ]; then
+        if [ "$force" = false ]; then
+            echo -e "${YELLOW}💡 检测到通过管道执行，自动启用强制模式${NC}"
+            force=true
+        fi
     fi
     
     if [ "$force" = false ]; then
