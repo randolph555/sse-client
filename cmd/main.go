@@ -97,3 +97,4 @@ func runSSE(cmd *cobra.Command, args []string) {
 	// 调用处理函数
 	internal.HandleSSE(args)
 }
+// CI优化测试：这个注释变更应该触发构建
