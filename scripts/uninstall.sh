@@ -32,7 +32,7 @@ detect_platform() {
     esac
 }
 
-# 查找并删除二进制文件
+# 查找并删除二进制文件和配置目录
 uninstall_binary() {
     local found=false
     local locations=(
@@ -55,12 +55,35 @@ uninstall_binary() {
         if [ -f "$location" ]; then
             echo -e "${YELLOW}📍 找到: $location${NC}"
             
+            # 获取安装目录
+            local install_dir=$(dirname "$location")
+            
             # 检查是否需要 sudo
             if [[ "$location" == "/usr/local/bin/"* ]] && [ ! -w "$(dirname "$location")" ]; then
                 echo -e "${YELLOW}🔐 需要管理员权限删除系统文件${NC}"
                 sudo rm -f "$location"
+                
+                # 删除配置目录（新的sse-configs和旧的configs）
+                if [ -d "$install_dir/sse-configs" ]; then
+                    echo -e "${YELLOW}📁 删除配置目录: $install_dir/sse-configs${NC}"
+                    sudo rm -rf "$install_dir/sse-configs"
+                fi
+                if [ -d "$install_dir/configs" ]; then
+                    echo -e "${YELLOW}📁 清理旧配置目录: $install_dir/configs${NC}"
+                    sudo rm -rf "$install_dir/configs"
+                fi
             else
                 rm -f "$location"
+                
+                # 删除配置目录（新的sse-configs和旧的configs）
+                if [ -d "$install_dir/sse-configs" ]; then
+                    echo -e "${YELLOW}📁 删除配置目录: $install_dir/sse-configs${NC}"
+                    rm -rf "$install_dir/sse-configs"
+                fi
+                if [ -d "$install_dir/configs" ]; then
+                    echo -e "${YELLOW}📁 清理旧配置目录: $install_dir/configs${NC}"
+                    rm -rf "$install_dir/configs"
+                fi
             fi
             
             if [ ! -f "$location" ]; then

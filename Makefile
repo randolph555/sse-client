@@ -40,13 +40,13 @@ build-all:
 release: build-all
 	@echo "📦 Creating release packages..."
 	@echo "📋 Copying configuration files..."
-	@cp -r configs $(DIST_DIR)/
+	@cp -r configs $(DIST_DIR)/sse-configs
 	@cd $(DIST_DIR) && \
 	for file in sse-*; do \
 		if [[ $$file == *.exe ]]; then \
-			zip -r "$${file%.exe}.zip" "$$file" configs/; \
+			zip -r "$${file%.exe}.zip" "$$file" sse-configs/; \
 		else \
-			tar -czf "$$file.tar.gz" "$$file" configs/; \
+			tar -czf "$$file.tar.gz" "$$file" sse-configs/; \
 		fi; \
 	done
 	@echo "🎉 Release packages created!"

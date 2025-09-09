@@ -82,10 +82,11 @@ func findConfigFile(specifiedFile string) string {
 
 	// 如果能获取到可执行文件目录，添加相对于可执行文件的配置路径
 	if execDir != "" {
-		// 添加可执行文件同目录下的configs目录
+		// 添加可执行文件同目录下的sse-configs目录（新的命名规范）
 		execConfigPaths := []string{
 			filepath.Join(execDir, "config.yaml"),
-			filepath.Join(execDir, "configs", "config.yaml"),
+			filepath.Join(execDir, "sse-configs", "config.yaml"),   // 新的配置目录
+			filepath.Join(execDir, "configs", "config.yaml"),       // 兼容旧的配置目录
 			filepath.Join(execDir, "..", "configs", "config.yaml"), // 用于开发环境
 		}
 		// 将可执行文件相关路径插入到搜索路径的前面

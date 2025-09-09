@@ -213,7 +213,7 @@ install_sse() {
     # 安装到目标目录
     echo -e "${BLUE}📦 正在安装...${NC}"
     local target_path="$INSTALL_DIR/$BINARY_NAME"
-    local config_dir="$INSTALL_DIR/configs"
+    local config_dir="$INSTALL_DIR/sse-configs"
     
     if [ "$INSTALL_DIR" = "/usr/local/bin" ] && [ ! -w "$INSTALL_DIR" ]; then
         echo -e "${YELLOW}🔐 需要管理员权限安装到系统目录${NC}"
@@ -221,20 +221,20 @@ install_sse() {
         sudo chmod +x "$target_path"
         
         # 安装配置文件
-        if [ -d "$temp_dir/configs" ]; then
+        if [ -d "$temp_dir/sse-configs" ]; then
             echo -e "${BLUE}📋 安装配置文件...${NC}"
             sudo mkdir -p "$config_dir"
-            sudo cp -r "$temp_dir/configs/"* "$config_dir/"
+            sudo cp -r "$temp_dir/sse-configs/"* "$config_dir/"
         fi
     else
         cp "$source_file" "$target_path"
         chmod +x "$target_path"
         
         # 安装配置文件
-        if [ -d "$temp_dir/configs" ]; then
+        if [ -d "$temp_dir/sse-configs" ]; then
             echo -e "${BLUE}📋 安装配置文件...${NC}"
             mkdir -p "$config_dir"
-            cp -r "$temp_dir/configs/"* "$config_dir/"
+            cp -r "$temp_dir/sse-configs/"* "$config_dir/"
         fi
     fi
 
