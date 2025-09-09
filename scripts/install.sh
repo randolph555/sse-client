@@ -234,12 +234,20 @@ install_sse() {
         source_file="./build/sse"
         echo -e "${YELLOW}🔧 检测到本地构建文件，使用本地版本${NC}"
     else
-        # 首先尝试从GitHub Releases下载
-        local archive_file="$temp_dir/sse.archive"
-        echo -e "   下载: ${DOWNLOAD_URL}"
-        echo -e "${BLUE}📥 正在从Releases下载...${NC}"
+        # 优先从dist目录下载预构建文件（静态链接版本）
+        echo -e "${BLUE}📥 正在从预构建文件下载（静态链接版本）...${NC}"
+        source_file=$(download_from_dist "$temp_dir")
         
-        if $DOWNLOAD_CMD "$archive_file" "$DOWNLOAD_URL"; then
+        if [ $? -eq 0 ] && [ -f "$source_file" ]; then
+            echo -e "${GREEN}✅ 预构建文件下载成功${NC}"
+        else
+            # 如果预构建文件下载失败，再尝试GitHub Releases
+            echo -e "${YELLOW}⚠️  预构建文件下载失败，尝试Releases...${NC}"
+            local archive_file="$temp_dir/sse.archive"
+            echo -e "   下载: ${DOWNLOAD_URL}"
+            echo -e "${BLUE}📥 正在从Releases下载...${NC}"
+            
+            if $DOWNLOAD_CMD "$archive_file" "$DOWNLOAD_URL"; then
             echo -e "${GREEN}✅ Releases下载完成${NC}"
             echo -e "${BLUE}📦 正在解压...${NC}"
             
@@ -271,23 +279,24 @@ install_sse() {
             else
                 chmod +x "$source_file"
                 echo -e "${GREEN}✅ 解压完成${NC}"
-            fi
-        else
-            echo -e "${YELLOW}⚠️  Releases下载失败，尝试预构建文件...${NC}"
-            source_file=$(download_from_dist "$temp_dir")
-            if [ $? -ne 0 ] || [ ! -f "$source_file" ]; then
-                echo -e "${RED}❌ 所有下载方案都失败了${NC}"
-                echo -e "${YELLOW}💡 可能的原因:${NC}"
-                echo -e "   1. 检查网络连接"
-                echo -e "   2. 使用代理或 VPN"
-                echo -e "   3. GitHub访问受限"
-                echo -e "${YELLOW}💡 备选方案:${NC}"
-                echo -e "   1. 稍后重试"
-                echo -e "   2. 手动下载并安装"
-                echo -e "   3. 使用国内加速脚本: install-zh.sh"
+            else
+                echo -e "${RED}❌ 解压失败${NC}"
                 rm -rf "$temp_dir"
                 exit 1
             fi
+        else
+            echo -e "${RED}❌ 所有下载方案都失败了${NC}"
+            echo -e "${YELLOW}💡 可能的原因:${NC}"
+            echo -e "   1. 检查网络连接"
+            echo -e "   2. 使用代理或 VPN"
+            echo -e "   3. GitHub访问受限"
+            echo -e "${YELLOW}💡 备选方案:${NC}"
+            echo -e "   1. 稍后重试"
+            echo -e "   2. 手动下载并安装"
+            echo -e "   3. 使用国内加速脚本: install-zh.sh"
+            rm -rf "$temp_dir"
+            exit 1
+        fi
         fi
     fi
     
