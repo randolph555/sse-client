@@ -35,7 +35,7 @@
 # 国内用户（推荐，使用代理加速）
 curl -fsSL http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-client/main/scripts/install-zh.sh | bash
 
-# 海外用户或有科学上网
+# 有科学上网,或者可以访问到github
 curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts/install.sh | bash
 ```
 
@@ -328,3 +328,15 @@ curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts
 ---
 
 **让 AI 成为你的终端超能力！** 🚀
+
+## 🔧 CI/CD 优化说明
+
+现在CI构建已优化，只在以下文件变更时触发：
+- Go源代码文件 (`**.go`)
+- 依赖文件 (`go.mod`, `go.sum`)
+- 构建文件 (`Makefile`)
+- 配置文件 (`configs/**`)
+- 核心目录 (`cmd/**`, `internal/**`, `providers/**`)
+- CI配置 (`.github/workflows/**`)
+
+文档更新（如README.md）不再触发不必要的构建，节省CI资源。
