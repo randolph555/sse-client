@@ -66,12 +66,30 @@ func findConfigFile(specifiedFile string) string {
 		return ""
 	}
 
+	// 获取可执行文件路径
+	execPath, err := os.Executable()
+	var execDir string
+	if err == nil {
+		execDir = filepath.Dir(execPath)
+	}
+
 	// 按优先级搜索配置文件
 	searchPaths := []string{
-		"./config.yaml",         // 当前目录
-		"./configs/config.yaml", // 项目配置目录
+		"./config.yaml", // 当前目录
 		os.ExpandEnv("$HOME/.config/sse-client/config.yaml"), // 用户配置目录
 		"/etc/sse-client/config.yaml",                        // 系统配置目录
+	}
+
+	// 如果能获取到可执行文件目录，添加相对于可执行文件的配置路径
+	if execDir != "" {
+		// 添加可执行文件同目录下的configs目录
+		execConfigPaths := []string{
+			filepath.Join(execDir, "config.yaml"),
+			filepath.Join(execDir, "configs", "config.yaml"),
+			filepath.Join(execDir, "..", "configs", "config.yaml"), // 用于开发环境
+		}
+		// 将可执行文件相关路径插入到搜索路径的前面
+		searchPaths = append(execConfigPaths, searchPaths...)
 	}
 
 	for _, path := range searchPaths {

@@ -39,12 +39,14 @@ build-all:
 # 发布版本（压缩）
 release: build-all
 	@echo "📦 Creating release packages..."
+	@echo "📋 Copying configuration files..."
+	@cp -r configs $(DIST_DIR)/
 	@cd $(DIST_DIR) && \
 	for file in sse-*; do \
 		if [[ $$file == *.exe ]]; then \
-			zip "$${file%.exe}.zip" "$$file"; \
+			zip -r "$${file%.exe}.zip" "$$file" configs/; \
 		else \
-			tar -czf "$$file.tar.gz" "$$file"; \
+			tar -czf "$$file.tar.gz" "$$file" configs/; \
 		fi; \
 	done
 	@echo "🎉 Release packages created!"

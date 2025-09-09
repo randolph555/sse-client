@@ -183,9 +183,11 @@ install_sse() {
             cd "$temp_dir"
             if [ "$OS" = "windows" ]; then
                 unzip -q "$archive_file"
+                # Windows下解压后的文件名
                 source_file="$temp_dir/sse-${OS}-${ARCH}.exe"
             else
                 tar xzf "$archive_file"
+                # Unix系统下解压后的文件名
                 source_file="$temp_dir/sse-${OS}-${ARCH}"
             fi
             
