@@ -6,7 +6,7 @@ timeout: 30
 max_tokens: 4096
 temperature: 0.7
 default_provider: "bailian"
-default_model: "qwen2.5-72b-instruct"
+default_model: "qwen-max"
 
 # Provider configurations
 providers:
