@@ -2,7 +2,7 @@
 # This file contains default model configurations for all providers
 
 # Default settings
-timeout: 30
+timeout: 300
 max_tokens: 4096
 temperature: 0.7
 default_provider: "bailian"
