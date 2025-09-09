@@ -104,7 +104,7 @@ uninstall_binary() {
     fi
 }
 
-# 删除配置文件（可选）
+# 删除配置文件（交互式）
 remove_config() {
     local config_locations=(
         "$HOME/.config/sse-client"
@@ -112,47 +112,143 @@ remove_config() {
     )
     
     echo -e "\n${BLUE}🗂️  配置文件清理${NC}"
-    echo -e "${YELLOW}是否删除配置文件？ (y/N):${NC}"
-    read -r response
     
-    if [[ "$response" =~ ^[Yy]$ ]]; then
-        for config_dir in "${config_locations[@]}"; do
-            if [ -d "$config_dir" ]; then
-                echo -e "${YELLOW}📁 删除配置目录: $config_dir${NC}"
-                rm -rf "$config_dir"
-                echo -e "${GREEN}✅ 已删除配置目录${NC}"
-            fi
-        done
+    # 检查是否有配置文件存在
+    local has_config=false
+    for config_dir in "${config_locations[@]}"; do
+        if [ -d "$config_dir" ]; then
+            has_config=true
+            break
+        fi
+    done
+    
+    if [ -f "./config.yaml" ]; then
+        has_config=true
+    fi
+    
+    if [ "$has_config" = false ]; then
+        echo -e "${BLUE}💡 未找到配置文件${NC}"
+        return
+    fi
+    
+    # 只在交互模式下询问
+    if [ -t 0 ]; then
+        echo -e "${YELLOW}是否删除配置文件？ (y/N):${NC}"
+        read -r response
         
-        # 删除当前目录的配置文件
-        if [ -f "./config.yaml" ]; then
-            echo -e "${YELLOW}📄 删除当前目录配置文件: ./config.yaml${NC}"
-            rm -f "./config.yaml"
-            echo -e "${GREEN}✅ 已删除配置文件${NC}"
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            remove_config_force
+        else
+            echo -e "${BLUE}💾 保留配置文件${NC}"
         fi
     else
-        echo -e "${BLUE}💾 保留配置文件${NC}"
+        echo -e "${BLUE}💾 保留配置文件（非交互模式，使用 -c 参数可删除）${NC}"
     fi
 }
 
 # 主函数
 main() {
+    local force=false
+    local remove_configs=false
+    
+    # 解析命令行参数
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -f|--force)
+                force=true
+                shift
+                ;;
+            -c|--remove-config)
+                remove_configs=true
+                shift
+                ;;
+            -h|--help)
+                echo -e "${BLUE}SSE Client 卸载脚本${NC}"
+                echo -e "用法: $0 [选项]"
+                echo -e ""
+                echo -e "选项:"
+                echo -e "  -f, --force           强制卸载，不询问确认"
+                echo -e "  -c, --remove-config   同时删除配置文件"
+                echo -e "  -h, --help           显示此帮助信息"
+                echo -e ""
+                echo -e "示例:"
+                echo -e "  $0                    交互式卸载"
+                echo -e "  $0 -f                 强制卸载"
+                echo -e "  $0 -f -c              强制卸载并删除配置"
+                echo -e ""
+                echo -e "通过管道使用:"
+                echo -e "  curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts/uninstall.sh | bash -s -- -f"
+                exit 0
+                ;;
+            *)
+                echo -e "${RED}❌ 未知参数: $1${NC}"
+                echo -e "使用 -h 或 --help 查看帮助"
+                exit 1
+                ;;
+        esac
+    done
+    
     echo -e "${BLUE}🗑️  SSE Client 卸载程序${NC}"
     echo -e "${YELLOW}⚠️  这将删除 SSE Client 及其相关文件${NC}"
-    echo -e "${YELLOW}是否继续？ (y/N):${NC}"
-    read -r confirm
     
-    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-        echo -e "${BLUE}❌ 取消卸载${NC}"
-        exit 0
+    # 检查是否通过管道执行（stdin不是终端）
+    if [ ! -t 0 ] && [ "$force" = false ]; then
+        echo -e "${YELLOW}💡 检测到通过管道执行，使用 -f 参数强制卸载：${NC}"
+        echo -e "   curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts/uninstall.sh | bash -s -- -f"
+        exit 1
+    fi
+    
+    if [ "$force" = false ]; then
+        echo -e "${YELLOW}是否继续？ (y/N):${NC}"
+        read -r confirm
+        
+        if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+            echo -e "${BLUE}❌ 取消卸载${NC}"
+            exit 0
+        fi
+    else
+        echo -e "${GREEN}🚀 强制卸载模式${NC}"
     fi
     
     detect_platform
     uninstall_binary
-    remove_config
+    
+    # 处理配置文件删除
+    if [ "$remove_configs" = true ]; then
+        remove_config_force
+    elif [ "$force" = false ]; then
+        remove_config
+    else
+        echo -e "${BLUE}💾 保留配置文件（使用 -c 参数可删除配置）${NC}"
+    fi
     
     echo -e "\n${GREEN}🎉 SSE Client 卸载完成！${NC}"
     echo -e "${BLUE}👋 感谢使用 SSE Client${NC}"
+}
+
+# 强制删除配置文件（不询问）
+remove_config_force() {
+    local config_locations=(
+        "$HOME/.config/sse-client"
+        "$HOME/.sse-client"
+    )
+    
+    echo -e "\n${BLUE}🗂️  删除配置文件...${NC}"
+    
+    for config_dir in "${config_locations[@]}"; do
+        if [ -d "$config_dir" ]; then
+            echo -e "${YELLOW}📁 删除配置目录: $config_dir${NC}"
+            rm -rf "$config_dir"
+            echo -e "${GREEN}✅ 已删除配置目录${NC}"
+        fi
+    done
+    
+    # 删除当前目录的配置文件
+    if [ -f "./config.yaml" ]; then
+        echo -e "${YELLOW}📄 删除当前目录配置文件: ./config.yaml${NC}"
+        rm -f "./config.yaml"
+        echo -e "${GREEN}✅ 已删除配置文件${NC}"
+    fi
 }
 
 # 执行主函数
