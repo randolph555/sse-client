@@ -191,6 +191,11 @@ install_sse() {
                 source_file="$temp_dir/sse-${OS}-${ARCH}"
             fi
             
+            # 兼容处理：若解压产物中为旧目录名 configs，则重命名为 sse-configs
+            if [ -d "$temp_dir/configs" ] && [ ! -d "$temp_dir/sse-configs" ]; then
+                mv "$temp_dir/configs" "$temp_dir/sse-configs"
+            fi
+            
             if [ ! -f "$source_file" ]; then
                 echo -e "${RED}❌ 解压失败${NC}"
                 rm -rf "$temp_dir"
