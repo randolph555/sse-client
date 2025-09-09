@@ -39,3 +39,5 @@ dist/
 
 # macOS specific
 .DS_Store
+
+.codebuddy

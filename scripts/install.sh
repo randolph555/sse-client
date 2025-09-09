@@ -279,10 +279,6 @@ install_sse() {
             else
                 chmod +x "$source_file"
                 echo -e "${GREEN}✅ 解压完成${NC}"
-            else
-                echo -e "${RED}❌ 解压失败${NC}"
-                rm -rf "$temp_dir"
-                exit 1
             fi
         else
             echo -e "${RED}❌ 所有下载方案都失败了${NC}"

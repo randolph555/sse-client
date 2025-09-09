@@ -46,6 +46,9 @@ curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts
 # 从GitHub Releases下载最新版本
 wget https://github.com/randolph555/sse-client/releases/latest/download/sse-linux-amd64.tar.gz
 tar -xzf sse-linux-amd64.tar.gz && sudo mv sse-linux-amd64 /usr/local/bin/sse
+
+# 重要：刷新命令缓存
+hash -r
 ```
 
 **方式2：直接下载预构建版本**
@@ -53,6 +56,12 @@ tar -xzf sse-linux-amd64.tar.gz && sudo mv sse-linux-amd64 /usr/local/bin/sse
 # 如果GitHub Actions排队，可直接下载预构建文件（国内加速）
 curl -fsSL http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-client/main/dist/sse-linux-amd64 -o sse
 chmod +x sse && sudo mv sse /usr/local/bin/
+
+# 重要：刷新命令缓存
+hash -r
+
+# 验证安装
+sse config
 ```
 
 ### 卸载
