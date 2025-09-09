@@ -254,7 +254,24 @@ install_sse() {
     rm -rf "$temp_dir"
 
     echo -e "${GREEN}✅ SSE Client 安装成功！${NC}"
-    echo -e "${GREEN}🎉 安装完成！${NC}"
+    
+    # 刷新命令缓存
+    if command -v hash >/dev/null 2>&1; then
+        hash -r 2>/dev/null || true
+    fi
+    
+    # 检查安装是否成功
+    if command -v sse >/dev/null 2>&1; then
+        echo -e "${GREEN}🎉 安装完成！命令已可用${NC}"
+    else
+        echo -e "${GREEN}🎉 安装完成！${NC}"
+        echo -e "${YELLOW}💡 如果 'sse' 命令不可用，请尝试：${NC}"
+        echo -e "   # 刷新命令缓存："
+        echo -e "   hash -r"
+        echo -e "   # 或重新打开终端"
+        echo -e "   # 或手动执行："
+        echo -e "   $target_path --help"
+    fi
 
     # 显示使用说明
     echo -e "\n${BLUE}📖 快速开始:${NC}"
