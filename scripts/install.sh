@@ -266,20 +266,22 @@ install_sse() {
         sudo chmod +x "$target_path"
         
         # 安装配置文件
-        if [ -d "$temp_dir/sse-configs" ]; then
+        if [ -f "$temp_dir/config.yaml" ] || [ -f "$temp_dir/config.example.yaml" ]; then
             echo -e "${BLUE}📋 安装配置文件...${NC}"
             sudo mkdir -p "$config_dir"
-            sudo cp -r "$temp_dir/sse-configs/"* "$config_dir/"
+            sudo cp "$temp_dir"/*.yaml "$config_dir/" 2>/dev/null || true
+            sudo cp "$temp_dir"/.env.example "$config_dir/" 2>/dev/null || true
         fi
     else
         cp "$source_file" "$target_path"
         chmod +x "$target_path"
         
         # 安装配置文件
-        if [ -d "$temp_dir/sse-configs" ]; then
+        if [ -f "$temp_dir/config.yaml" ] || [ -f "$temp_dir/config.example.yaml" ]; then
             echo -e "${BLUE}📋 安装配置文件...${NC}"
             mkdir -p "$config_dir"
-            cp -r "$temp_dir/sse-configs/"* "$config_dir/"
+            cp "$temp_dir"/*.yaml "$config_dir/" 2>/dev/null || true
+            cp "$temp_dir"/.env.example "$config_dir/" 2>/dev/null || true
         fi
     fi
 
