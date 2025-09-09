@@ -105,9 +105,13 @@ download_files() {
     
     echo -e "${BLUE}📥 下载配置文件...${NC}"
     if [ "$DOWNLOAD_TOOL" = "curl" ]; then
-        curl -L -f -o "$temp_dir/config.yaml" "$config_url" || echo -e "${YELLOW}⚠️  配置文件下载失败，将使用默认配置${NC}"
+        if ! curl -L -f -o "$temp_dir/config.yaml" "$config_url"; then
+            echo -e "${YELLOW}⚠️  配置文件下载失败，将使用默认配置${NC}"
+        fi
     else
-        wget -O "$temp_dir/config.yaml" "$config_url" || echo -e "${YELLOW}⚠️  配置文件下载失败，将使用默认配置${NC}"
+        if ! wget -O "$temp_dir/config.yaml" "$config_url"; then
+            echo -e "${YELLOW}⚠️  配置文件下载失败，将使用默认配置${NC}"
+        fi
     fi
     
     chmod +x "$binary_file"
