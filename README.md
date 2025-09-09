@@ -32,7 +32,10 @@
 ### 一键安装（推荐）
 
 ```bash
-# macOS / Linux
+# 国内用户（推荐，使用代理加速）
+curl -fsSL http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-client/main/scripts/install-zh.sh | bash
+
+# 海外用户或有科学上网
 curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts/install.sh | bash
 ```
 
