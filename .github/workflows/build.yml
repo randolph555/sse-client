@@ -3,40 +3,22 @@ name: Build and Test
 on:
   push:
     branches: [ main ]
-    paths:
-      - '**.go'
-      - 'go.mod'
-      - 'go.sum'
-      - 'Makefile'
-      - 'configs/**'
-      - 'cmd/**'
-      - 'internal/**'
-      - 'providers/**'
-      - '.github/workflows/**'
     paths-ignore:
       - 'README.md'
       - 'docs/**'
       - 'scripts/install*.sh'
       - 'scripts/uninstall.sh'
       - '*.md'
+      - 'LICENSE'
   pull_request:
     branches: [ main ]
-    paths:
-      - '**.go'
-      - 'go.mod'
-      - 'go.sum'
-      - 'Makefile'
-      - 'configs/**'
-      - 'cmd/**'
-      - 'internal/**'
-      - 'providers/**'
-      - '.github/workflows/**'
     paths-ignore:
       - 'README.md'
       - 'docs/**'
       - 'scripts/install*.sh'
       - 'scripts/uninstall.sh'
       - '*.md'
+      - 'LICENSE'
 
 jobs:
   build:
