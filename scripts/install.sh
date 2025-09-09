@@ -176,7 +176,9 @@ determine_install_dir() {
 download_from_dist() {
     local temp_dir="$1"
     local binary_url="https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}"
-    local config_url="https://raw.githubusercontent.com/${REPO}/main/dist/sse-configs.tar.gz"
+    local config_url="https://raw.githubusercontent.com/${REPO}/main/configs/config.yaml"
+    local config_example_url="https://raw.githubusercontent.com/${REPO}/main/configs/config.example.yaml"
+    local env_example_url="https://raw.githubusercontent.com/${REPO}/main/configs/.env.example"
     
     if [ "$OS" = "windows" ]; then
         binary_url="https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}.exe"
@@ -192,25 +194,20 @@ download_from_dist() {
         echo -e "${GREEN}✅ 二进制文件下载完成${NC}" >&2
         
         # 下载配置文件
-        local config_file="$temp_dir/sse-configs.tar.gz"
-        if $DOWNLOAD_CMD "$config_file" "$config_url" >&2; then
+        echo -e "${BLUE}📥 下载配置文件...${NC}" >&2
+        $DOWNLOAD_CMD "$temp_dir/config.yaml" "$config_url" >&2 2>/dev/null || true
+        $DOWNLOAD_CMD "$temp_dir/config.example.yaml" "$config_example_url" >&2 2>/dev/null || true
+        $DOWNLOAD_CMD "$temp_dir/.env.example" "$env_example_url" >&2 2>/dev/null || true
+        
+        if [ -f "$temp_dir/config.yaml" ] || [ -f "$temp_dir/config.example.yaml" ]; then
             echo -e "${GREEN}✅ 配置文件下载完成${NC}" >&2
-            
-            # 解压配置文件
-            cd "$temp_dir"
-            tar xzf "$config_file" 2>/dev/null || {
-                echo -e "${YELLOW}⚠️  配置文件解压失败，将使用默认配置${NC}" >&2
-            }
-            
-            chmod +x "$binary_file"
-            echo "$binary_file"
-            return 0
         else
             echo -e "${YELLOW}⚠️  配置文件下载失败，将仅安装二进制文件${NC}" >&2
-            chmod +x "$binary_file"
-            echo "$binary_file"
-            return 0
         fi
+        
+        chmod +x "$binary_file"
+        echo "$binary_file"
+        return 0
     else
         echo -e "${RED}❌ 预构建文件下载失败${NC}" >&2
         return 1
