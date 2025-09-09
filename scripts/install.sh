@@ -238,50 +238,8 @@ install_sse() {
         echo -e "${BLUE}📥 正在从预构建文件下载（静态链接版本）...${NC}"
         source_file=$(download_from_dist "$temp_dir")
         
-        if [ $? -eq 0 ] && [ -f "$source_file" ]; then
-            echo -e "${GREEN}✅ 预构建文件下载成功${NC}"
-        else
-            # 如果预构建文件下载失败，再尝试GitHub Releases
-            echo -e "${YELLOW}⚠️  预构建文件下载失败，尝试Releases...${NC}"
-            local archive_file="$temp_dir/sse.archive"
-            echo -e "   下载: ${DOWNLOAD_URL}"
-            echo -e "${BLUE}📥 正在从Releases下载...${NC}"
-            
-            if $DOWNLOAD_CMD "$archive_file" "$DOWNLOAD_URL"; then
-            echo -e "${GREEN}✅ Releases下载完成${NC}"
-            echo -e "${BLUE}📦 正在解压...${NC}"
-            
-            # 解压文件
-            cd "$temp_dir"
-            if [ "$OS" = "windows" ]; then
-                unzip -q "$archive_file"
-                # Windows下解压后的文件名
-                source_file="$temp_dir/sse-${OS}-${ARCH}.exe"
-            else
-                tar xzf "$archive_file"
-                # Unix系统下解压后的文件名 - 解压后直接在当前目录
-                source_file="$temp_dir/sse-${OS}-${ARCH}"
-            fi
-            
-            # 兼容处理：若解压产物中为旧目录名 configs，则重命名为 sse-configs
-            if [ -d "$temp_dir/configs" ] && [ ! -d "$temp_dir/sse-configs" ]; then
-                mv "$temp_dir/configs" "$temp_dir/sse-configs"
-            fi
-            
-            if [ ! -f "$source_file" ]; then
-                echo -e "${RED}❌ 解压失败，尝试fallback方案${NC}"
-                source_file=$(download_from_dist "$temp_dir")
-                if [ $? -ne 0 ] || [ ! -f "$source_file" ]; then
-                    echo -e "${RED}❌ 所有下载方案都失败了${NC}"
-                    rm -rf "$temp_dir"
-                    exit 1
-                fi
-            else
-                chmod +x "$source_file"
-                echo -e "${GREEN}✅ 解压完成${NC}"
-            fi
-        else
-            echo -e "${RED}❌ 所有下载方案都失败了${NC}"
+        if [ $? -ne 0 ] || [ ! -f "$source_file" ]; then
+            echo -e "${RED}❌ 预构建文件下载失败${NC}"
             echo -e "${YELLOW}💡 可能的原因:${NC}"
             echo -e "   1. 检查网络连接"
             echo -e "   2. 使用代理或 VPN"
@@ -293,7 +251,8 @@ install_sse() {
             rm -rf "$temp_dir"
             exit 1
         fi
-        fi
+        
+        echo -e "${GREEN}✅ 预构建文件下载成功${NC}"
     fi
     
     # 安装到目标目录

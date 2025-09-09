@@ -17,8 +17,6 @@ REPO="randolph555/sse-client"
 BINARY_NAME="sse"
 # 使用国内代理加速GitHub访问
 GITHUB_PROXY="http://gh.cdn01.cn"
-# 默认不使用静态链接版本
-USE_STATIC_BUILD=false
 
 # 检测操作系统和架构
 detect_platform() {
@@ -93,40 +91,12 @@ check_system_compatibility() {
             local glibc_version=$(ldd --version 2>/dev/null | head -n1 | grep -o '[0-9]\+\.[0-9]\+' | head -n1)
             if [ -n "$glibc_version" ]; then
                 echo -e "${BLUE}🔍 检测到 GLIBC 版本: $glibc_version${NC}"
-                
-                # 检查是否低于最新版本需要的 GLIBC 2.34
-                if [ "$(printf '%s\n' "2.34" "$glibc_version" | sort -V | head -n1)" = "$glibc_version" ]; then
-                    echo -e "${YELLOW}⚠️  检测到 GLIBC 版本 ($glibc_version) 低于 2.34${NC}"
-                    echo -e "${YELLOW}⚠️  将尝试下载静态链接版本或兼容版本${NC}"
-                    # 标记使用静态链接版本
-                    USE_STATIC_BUILD=true
-                    # 修改下载URL为静态链接版本
-                    if [ "$OS" = "linux" ]; then
-                        DOWNLOAD_URL="${GITHUB_PROXY}/https://github.com/${REPO}/releases/latest/download/sse-${PLATFORM}-static.tar.gz"
-                    fi
-                else
-                    echo -e "${GREEN}✅ GLIBC版本兼容${NC}"
-                    USE_STATIC_BUILD=false
-                fi
-                
                 # 检查是否低于2.17（CentOS 7的版本）
-                if [ "$(printf '%s\n' "2.17" "$glibc_version" | sort -V | head -n1)" != "2.17" ]; then
-                    echo -e "${YELLOW}⚠️  GLIBC版本较老 ($glibc_version < 2.17)，可能存在兼容性问题${NC}"
+                if [ "$(printf '%s\n' "2.17" "$glibc_version" | sort -V | head -n1)" = "2.17" ]; then
+                    echo -e "${GREEN}✅ GLIBC版本兼容${NC}"
+                else
+                    echo -e "${YELLOW}⚠️  GLIBC版本较老，如果遇到兼容性问题，请联系开发者${NC}"
                 fi
-            else
-                echo -e "${YELLOW}⚠️  无法检测 GLIBC 版本，将尝试使用静态链接版本${NC}"
-                USE_STATIC_BUILD=true
-                # 修改下载URL为静态链接版本
-                if [ "$OS" = "linux" ]; then
-                    DOWNLOAD_URL="${GITHUB_PROXY}/https://github.com/${REPO}/releases/latest/download/sse-${PLATFORM}-static.tar.gz"
-                fi
-            fi
-        else
-            echo -e "${YELLOW}⚠️  无法检测 GLIBC 版本 (ldd 命令不可用)，将尝试使用静态链接版本${NC}"
-            USE_STATIC_BUILD=true
-            # 修改下载URL为静态链接版本
-            if [ "$OS" = "linux" ]; then
-                DOWNLOAD_URL="${GITHUB_PROXY}/https://github.com/${REPO}/releases/latest/download/sse-${PLATFORM}-static.tar.gz"
             fi
         fi
     fi
@@ -208,17 +178,11 @@ determine_install_dir() {
 # 从dist目录下载预构建文件（fallback方案）
 download_from_dist() {
     local temp_dir="$1"
-    local binary_url=""
+    local binary_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}"
     local config_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-configs.tar.gz"
     
-    # 根据GLIBC版本选择合适的二进制文件
-    if [ "$OS" = "linux" ] && [ "$USE_STATIC_BUILD" = true ]; then
-        binary_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}-static"
-        echo -e "${YELLOW}🔄 将使用静态链接版本，以解决GLIBC兼容性问题${NC}"
-    elif [ "$OS" = "windows" ]; then
+    if [ "$OS" = "windows" ]; then
         binary_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}.exe"
-    else
-        binary_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}"
     fi
     
     echo -e "${YELLOW}🔄 尝试从预构建文件下载（国内加速）...${NC}"
@@ -278,50 +242,8 @@ install_sse() {
         echo -e "${BLUE}📥 正在从预构建文件下载（静态链接版本）...${NC}"
         source_file=$(download_from_dist "$temp_dir")
         
-        if [ $? -eq 0 ] && [ -f "$source_file" ]; then
-            echo -e "${GREEN}✅ 预构建文件下载成功${NC}"
-        else
-            # 如果预构建文件下载失败，再尝试GitHub Releases
-            echo -e "${YELLOW}⚠️  预构建文件下载失败，尝试Releases...${NC}"
-            local archive_file="$temp_dir/sse.archive"
-            echo -e "   下载: ${DOWNLOAD_URL}"
-            echo -e "${BLUE}📥 正在从Releases下载（国内加速）...${NC}"
-            
-            if $DOWNLOAD_CMD "$archive_file" "$DOWNLOAD_URL"; then
-            echo -e "${GREEN}✅ Releases下载完成${NC}"
-            echo -e "${BLUE}📦 正在解压...${NC}"
-            
-            # 解压文件
-            cd "$temp_dir"
-            if [ "$OS" = "windows" ]; then
-                unzip -q "$archive_file"
-                # Windows下解压后的文件名
-                source_file="$temp_dir/sse-${OS}-${ARCH}.exe"
-            else
-                tar xzf "$archive_file"
-                # Unix系统下解压后的文件名 - 解压后直接在当前目录
-                source_file="$temp_dir/sse-${OS}-${ARCH}"
-            fi
-            
-            # 兼容处理：若解压产物中为旧目录名 configs，则重命名为 sse-configs
-            if [ -d "$temp_dir/configs" ] && [ ! -d "$temp_dir/sse-configs" ]; then
-                mv "$temp_dir/configs" "$temp_dir/sse-configs"
-            fi
-            
-            if [ ! -f "$source_file" ]; then
-                echo -e "${RED}❌ 解压失败，尝试fallback方案${NC}"
-                source_file=$(download_from_dist "$temp_dir")
-                if [ $? -ne 0 ] || [ ! -f "$source_file" ]; then
-                    echo -e "${RED}❌ 所有下载方案都失败了${NC}"
-                    rm -rf "$temp_dir"
-                    exit 1
-                fi
-            else
-                chmod +x "$source_file"
-                echo -e "${GREEN}✅ 解压完成${NC}"
-            fi
-        else
-            echo -e "${RED}❌ 所有下载方案都失败了${NC}"
+        if [ $? -ne 0 ] || [ ! -f "$source_file" ]; then
+            echo -e "${RED}❌ 预构建文件下载失败${NC}"
             echo -e "${YELLOW}💡 可能的原因:${NC}"
             echo -e "   1. 检查网络连接"
             echo -e "   2. 代理服务器暂时不可用"
@@ -333,7 +255,8 @@ install_sse() {
             rm -rf "$temp_dir"
             exit 1
         fi
-        fi
+        
+        echo -e "${GREEN}✅ 预构建文件下载成功${NC}"
     fi
     
     # 安装到目标目录
