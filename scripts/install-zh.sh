@@ -79,24 +79,35 @@ download_files() {
     local config_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/configs/config.yaml"
     
     echo -e "${BLUE}📥 下载二进制文件...${NC}"
+    echo -e "${BLUE}   URL: $binary_url${NC}"
     local binary_file="$temp_dir/sse-binary"
     if [ "$DOWNLOAD_TOOL" = "curl" ]; then
-        if ! curl -L -f -o "$binary_file" "$binary_url" 2>/dev/null; then
+        if ! curl -L -f -o "$binary_file" "$binary_url"; then
             echo -e "${RED}❌ 二进制文件下载失败${NC}"
-            return 1
+            echo -e "${YELLOW}💡 尝试直接从GitHub下载...${NC}"
+            local direct_url="https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}"
+            if ! curl -L -f -o "$binary_file" "$direct_url"; then
+                echo -e "${RED}❌ 直接下载也失败${NC}"
+                return 1
+            fi
         fi
     else
-        if ! wget -O "$binary_file" "$binary_url" 2>/dev/null; then
+        if ! wget -O "$binary_file" "$binary_url"; then
             echo -e "${RED}❌ 二进制文件下载失败${NC}"
-            return 1
+            echo -e "${YELLOW}💡 尝试直接从GitHub下载...${NC}"
+            local direct_url="https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}"
+            if ! wget -O "$binary_file" "$direct_url"; then
+                echo -e "${RED}❌ 直接下载也失败${NC}"
+                return 1
+            fi
         fi
     fi
     
     echo -e "${BLUE}📥 下载配置文件...${NC}"
     if [ "$DOWNLOAD_TOOL" = "curl" ]; then
-        curl -L -f -o "$temp_dir/config.yaml" "$config_url" 2>/dev/null || true
+        curl -L -f -o "$temp_dir/config.yaml" "$config_url" || echo -e "${YELLOW}⚠️  配置文件下载失败，将使用默认配置${NC}"
     else
-        wget -O "$temp_dir/config.yaml" "$config_url" 2>/dev/null || true
+        wget -O "$temp_dir/config.yaml" "$config_url" || echo -e "${YELLOW}⚠️  配置文件下载失败，将使用默认配置${NC}"
     fi
     
     chmod +x "$binary_file"
