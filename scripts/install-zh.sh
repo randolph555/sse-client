@@ -82,6 +82,25 @@ detect_platform() {
     fi
 }
 
+# 检查系统兼容性
+check_system_compatibility() {
+    # 检查GLIBC版本（仅Linux系统）
+    if [ "$OS" = "linux" ]; then
+        if command -v ldd >/dev/null 2>&1; then
+            local glibc_version=$(ldd --version 2>/dev/null | head -n1 | grep -o '[0-9]\+\.[0-9]\+' | head -n1)
+            if [ -n "$glibc_version" ]; then
+                echo -e "${BLUE}🔍 检测到 GLIBC 版本: $glibc_version${NC}"
+                # 检查是否低于2.17（CentOS 7的版本）
+                if [ "$(printf '%s\n' "2.17" "$glibc_version" | sort -V | head -n1)" = "2.17" ]; then
+                    echo -e "${GREEN}✅ GLIBC版本兼容${NC}"
+                else
+                    echo -e "${YELLOW}⚠️  GLIBC版本较老，如果遇到兼容性问题，请联系开发者${NC}"
+                fi
+            fi
+        fi
+    fi
+}
+
 # 检查依赖
 check_dependencies() {
     local missing_deps=()
@@ -298,6 +317,7 @@ install_sse() {
 # 主函数
 main() {
     detect_platform
+    check_system_compatibility
     check_dependencies
     get_download_cmd
     determine_install_dir
