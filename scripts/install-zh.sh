@@ -17,6 +17,8 @@ REPO="randolph555/sse-client"
 BINARY_NAME="sse"
 # 使用国内代理加速GitHub访问
 GITHUB_PROXY="http://gh.cdn01.cn"
+# 默认不使用静态链接版本
+USE_STATIC_BUILD=false
 
 # 检测操作系统和架构
 detect_platform() {
@@ -78,6 +80,7 @@ detect_platform() {
         BINARY_NAME="sse.exe"
         DOWNLOAD_URL="${GITHUB_PROXY}/https://github.com/${REPO}/releases/latest/download/sse-${PLATFORM}.zip"
     else
+        # 默认下载URL，可能会在check_system_compatibility中被修改
         DOWNLOAD_URL="${GITHUB_PROXY}/https://github.com/${REPO}/releases/latest/download/sse-${PLATFORM}.tar.gz"
     fi
 }
@@ -90,12 +93,40 @@ check_system_compatibility() {
             local glibc_version=$(ldd --version 2>/dev/null | head -n1 | grep -o '[0-9]\+\.[0-9]\+' | head -n1)
             if [ -n "$glibc_version" ]; then
                 echo -e "${BLUE}🔍 检测到 GLIBC 版本: $glibc_version${NC}"
-                # 检查是否低于2.17（CentOS 7的版本）
-                if [ "$(printf '%s\n' "2.17" "$glibc_version" | sort -V | head -n1)" = "2.17" ]; then
-                    echo -e "${GREEN}✅ GLIBC版本兼容${NC}"
+                
+                # 检查是否低于最新版本需要的 GLIBC 2.34
+                if [ "$(printf '%s\n' "2.34" "$glibc_version" | sort -V | head -n1)" = "$glibc_version" ]; then
+                    echo -e "${YELLOW}⚠️  检测到 GLIBC 版本 ($glibc_version) 低于 2.34${NC}"
+                    echo -e "${YELLOW}⚠️  将尝试下载静态链接版本或兼容版本${NC}"
+                    # 标记使用静态链接版本
+                    USE_STATIC_BUILD=true
+                    # 修改下载URL为静态链接版本
+                    if [ "$OS" = "linux" ]; then
+                        DOWNLOAD_URL="${GITHUB_PROXY}/https://github.com/${REPO}/releases/latest/download/sse-${PLATFORM}-static.tar.gz"
+                    fi
                 else
-                    echo -e "${YELLOW}⚠️  GLIBC版本较老，如果遇到兼容性问题，请联系开发者${NC}"
+                    echo -e "${GREEN}✅ GLIBC版本兼容${NC}"
+                    USE_STATIC_BUILD=false
                 fi
+                
+                # 检查是否低于2.17（CentOS 7的版本）
+                if [ "$(printf '%s\n' "2.17" "$glibc_version" | sort -V | head -n1)" != "2.17" ]; then
+                    echo -e "${YELLOW}⚠️  GLIBC版本较老 ($glibc_version < 2.17)，可能存在兼容性问题${NC}"
+                fi
+            else
+                echo -e "${YELLOW}⚠️  无法检测 GLIBC 版本，将尝试使用静态链接版本${NC}"
+                USE_STATIC_BUILD=true
+                # 修改下载URL为静态链接版本
+                if [ "$OS" = "linux" ]; then
+                    DOWNLOAD_URL="${GITHUB_PROXY}/https://github.com/${REPO}/releases/latest/download/sse-${PLATFORM}-static.tar.gz"
+                fi
+            fi
+        else
+            echo -e "${YELLOW}⚠️  无法检测 GLIBC 版本 (ldd 命令不可用)，将尝试使用静态链接版本${NC}"
+            USE_STATIC_BUILD=true
+            # 修改下载URL为静态链接版本
+            if [ "$OS" = "linux" ]; then
+                DOWNLOAD_URL="${GITHUB_PROXY}/https://github.com/${REPO}/releases/latest/download/sse-${PLATFORM}-static.tar.gz"
             fi
         fi
     fi
@@ -177,11 +208,17 @@ determine_install_dir() {
 # 从dist目录下载预构建文件（fallback方案）
 download_from_dist() {
     local temp_dir="$1"
-    local binary_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}"
+    local binary_url=""
     local config_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-configs.tar.gz"
     
-    if [ "$OS" = "windows" ]; then
+    # 根据GLIBC版本选择合适的二进制文件
+    if [ "$OS" = "linux" ] && [ "$USE_STATIC_BUILD" = true ]; then
+        binary_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}-static"
+        echo -e "${YELLOW}🔄 将使用静态链接版本，以解决GLIBC兼容性问题${NC}"
+    elif [ "$OS" = "windows" ]; then
         binary_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}.exe"
+    else
+        binary_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}"
     fi
     
     echo -e "${YELLOW}🔄 尝试从预构建文件下载（国内加速）...${NC}"
