@@ -78,14 +78,15 @@ download_files() {
     local config_url="https://raw.githubusercontent.com/${REPO}/main/configs/config.yaml"
     
     echo -e "${BLUE}📥 Downloading binary...${NC}"
+    echo -e "${BLUE}   URL: $binary_url${NC}"
     local binary_file="$temp_dir/sse-binary"
     if [ "$DOWNLOAD_TOOL" = "curl" ]; then
-        if ! curl -L -f -o "$binary_file" "$binary_url" 2>/dev/null; then
+        if ! curl -L -f -o "$binary_file" "$binary_url"; then
             echo -e "${RED}❌ Binary download failed${NC}"
             return 1
         fi
     else
-        if ! wget -O "$binary_file" "$binary_url" 2>/dev/null; then
+        if ! wget -O "$binary_file" "$binary_url"; then
             echo -e "${RED}❌ Binary download failed${NC}"
             return 1
         fi
@@ -93,13 +94,16 @@ download_files() {
     
     echo -e "${BLUE}📥 Downloading config file...${NC}"
     if [ "$DOWNLOAD_TOOL" = "curl" ]; then
-        curl -L -f -o "$temp_dir/config.yaml" "$config_url" 2>/dev/null || true
+        if ! curl -L -f -o "$temp_dir/config.yaml" "$config_url"; then
+            echo -e "${YELLOW}⚠️  Config file download failed, using defaults${NC}"
+        fi
     else
-        wget -O "$temp_dir/config.yaml" "$config_url" 2>/dev/null || true
+        if ! wget -O "$temp_dir/config.yaml" "$config_url"; then
+            echo -e "${YELLOW}⚠️  Config file download failed, using defaults${NC}"
+        fi
     fi
     
     chmod +x "$binary_file"
-    echo "$binary_file"
     return 0
 }
 
@@ -205,12 +209,13 @@ main() {
         source_file="./build/sse"
         echo -e "${YELLOW}🔧 Using local build${NC}"
     else
-        source_file=$(download_files "$temp_dir")
-        if [ $? -ne 0 ] || [ ! -f "$source_file" ]; then
+        if download_files "$temp_dir"; then
+            source_file="$temp_dir/sse-binary"
+            echo -e "${GREEN}✅ Download complete${NC}"
+        else
             echo -e "${RED}❌ Download failed${NC}"
             exit 1
         fi
-        echo -e "${GREEN}✅ Download complete${NC}"
     fi
     
     install_files "$source_file" "$temp_dir"
