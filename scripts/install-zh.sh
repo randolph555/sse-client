@@ -185,37 +185,37 @@ download_from_dist() {
         binary_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}.exe"
     fi
     
-    echo -e "${YELLOW}🔄 尝试从预构建文件下载（国内加速）...${NC}"
-    echo -e "   二进制: ${binary_url}"
-    echo -e "   配置: ${config_url}"
+    echo -e "${YELLOW}🔄 尝试从预构建文件下载（国内加速）...${NC}" >&2
+    echo -e "   二进制: ${binary_url}" >&2
+    echo -e "   配置: ${config_url}" >&2
     
     # 下载二进制文件
     local binary_file="$temp_dir/sse-binary"
-    if $DOWNLOAD_CMD "$binary_file" "$binary_url"; then
-        echo -e "${GREEN}✅ 二进制文件下载完成${NC}"
+    if $DOWNLOAD_CMD "$binary_file" "$binary_url" >&2; then
+        echo -e "${GREEN}✅ 二进制文件下载完成${NC}" >&2
         
         # 下载配置文件
         local config_file="$temp_dir/sse-configs.tar.gz"
-        if $DOWNLOAD_CMD "$config_file" "$config_url"; then
-            echo -e "${GREEN}✅ 配置文件下载完成${NC}"
+        if $DOWNLOAD_CMD "$config_file" "$config_url" >&2; then
+            echo -e "${GREEN}✅ 配置文件下载完成${NC}" >&2
             
             # 解压配置文件
             cd "$temp_dir"
             tar xzf "$config_file" 2>/dev/null || {
-                echo -e "${YELLOW}⚠️  配置文件解压失败，将使用默认配置${NC}"
+                echo -e "${YELLOW}⚠️  配置文件解压失败，将使用默认配置${NC}" >&2
             }
             
             chmod +x "$binary_file"
             echo "$binary_file"
             return 0
         else
-            echo -e "${YELLOW}⚠️  配置文件下载失败，将仅安装二进制文件${NC}"
+            echo -e "${YELLOW}⚠️  配置文件下载失败，将仅安装二进制文件${NC}" >&2
             chmod +x "$binary_file"
             echo "$binary_file"
             return 0
         fi
     else
-        echo -e "${RED}❌ 预构建文件下载失败${NC}"
+        echo -e "${RED}❌ 预构建文件下载失败${NC}" >&2
         return 1
     fi
 }
