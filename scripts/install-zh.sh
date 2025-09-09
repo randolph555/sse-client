@@ -174,6 +174,51 @@ determine_install_dir() {
     fi
 }
 
+# 从dist目录下载预构建文件（fallback方案）
+download_from_dist() {
+    local temp_dir="$1"
+    local binary_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}"
+    local config_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-configs.tar.gz"
+    
+    if [ "$OS" = "windows" ]; then
+        binary_url="${GITHUB_PROXY}/https://raw.githubusercontent.com/${REPO}/main/dist/sse-${PLATFORM}.exe"
+    fi
+    
+    echo -e "${YELLOW}🔄 尝试从预构建文件下载（国内加速）...${NC}"
+    echo -e "   二进制: ${binary_url}"
+    echo -e "   配置: ${config_url}"
+    
+    # 下载二进制文件
+    local binary_file="$temp_dir/sse-binary"
+    if $DOWNLOAD_CMD "$binary_file" "$binary_url"; then
+        echo -e "${GREEN}✅ 二进制文件下载完成${NC}"
+        
+        # 下载配置文件
+        local config_file="$temp_dir/sse-configs.tar.gz"
+        if $DOWNLOAD_CMD "$config_file" "$config_url"; then
+            echo -e "${GREEN}✅ 配置文件下载完成${NC}"
+            
+            # 解压配置文件
+            cd "$temp_dir"
+            tar xzf "$config_file" 2>/dev/null || {
+                echo -e "${YELLOW}⚠️  配置文件解压失败，将使用默认配置${NC}"
+            }
+            
+            chmod +x "$binary_file"
+            echo "$binary_file"
+            return 0
+        else
+            echo -e "${YELLOW}⚠️  配置文件下载失败，将仅安装二进制文件${NC}"
+            chmod +x "$binary_file"
+            echo "$binary_file"
+            return 0
+        fi
+    else
+        echo -e "${RED}❌ 预构建文件下载失败${NC}"
+        return 1
+    fi
+}
+
 # 下载并安装
 install_sse() {
     echo -e "${BLUE}🚀 SSE Client 一键安装（国内加速版）${NC}"
@@ -192,13 +237,13 @@ install_sse() {
         source_file="./build/sse"
         echo -e "${YELLOW}🔧 检测到本地构建文件，使用本地版本${NC}"
     else
-        # 下载压缩包
+        # 首先尝试从GitHub Releases下载
         local archive_file="$temp_dir/sse.archive"
         echo -e "   下载: ${DOWNLOAD_URL}"
-        echo -e "${BLUE}📥 正在下载...${NC}"
+        echo -e "${BLUE}📥 正在从Releases下载（国内加速）...${NC}"
         
         if $DOWNLOAD_CMD "$archive_file" "$DOWNLOAD_URL"; then
-            echo -e "${GREEN}✅ 下载完成${NC}"
+            echo -e "${GREEN}✅ Releases下载完成${NC}"
             echo -e "${BLUE}📦 正在解压...${NC}"
             
             # 解压文件
@@ -219,25 +264,33 @@ install_sse() {
             fi
             
             if [ ! -f "$source_file" ]; then
-                echo -e "${RED}❌ 解压失败${NC}"
+                echo -e "${RED}❌ 解压失败，尝试fallback方案${NC}"
+                source_file=$(download_from_dist "$temp_dir")
+                if [ $? -ne 0 ] || [ ! -f "$source_file" ]; then
+                    echo -e "${RED}❌ 所有下载方案都失败了${NC}"
+                    rm -rf "$temp_dir"
+                    exit 1
+                fi
+            else
+                chmod +x "$source_file"
+                echo -e "${GREEN}✅ 解压完成${NC}"
+            fi
+        else
+            echo -e "${YELLOW}⚠️  Releases下载失败，尝试预构建文件...${NC}"
+            source_file=$(download_from_dist "$temp_dir")
+            if [ $? -ne 0 ] || [ ! -f "$source_file" ]; then
+                echo -e "${RED}❌ 所有下载方案都失败了${NC}"
+                echo -e "${YELLOW}💡 可能的原因:${NC}"
+                echo -e "   1. 检查网络连接"
+                echo -e "   2. 代理服务器暂时不可用"
+                echo -e "   3. GitHub访问受限"
+                echo -e "${YELLOW}💡 备选方案:${NC}"
+                echo -e "   1. 稍后重试"
+                echo -e "   2. 使用原版安装脚本（需要科学上网）"
+                echo -e "   3. 手动下载并安装"
                 rm -rf "$temp_dir"
                 exit 1
             fi
-            
-            chmod +x "$source_file"
-            echo -e "${GREEN}✅ 解压完成${NC}"
-        else
-            echo -e "${RED}❌ 下载失败${NC}"
-            echo -e "${YELLOW}💡 可能的原因:${NC}"
-            echo -e "   1. 检查网络连接"
-            echo -e "   2. 代理服务器暂时不可用"
-            echo -e "   3. 发布版本不存在"
-            echo -e "${YELLOW}💡 备选方案:${NC}"
-            echo -e "   1. 稍后重试"
-            echo -e "   2. 使用原版安装脚本（需要科学上网）"
-            echo -e "   3. 手动下载并安装"
-            rm -rf "$temp_dir"
-            exit 1
         fi
     fi
     
@@ -274,6 +327,43 @@ install_sse() {
 
     echo -e "${GREEN}✅ SSE Client 安装成功！${NC}"
     
+    # 处理PATH问题
+    local path_updated=false
+    if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+        echo -e "${YELLOW}🔧 检测到 $INSTALL_DIR 不在PATH中，正在添加...${NC}"
+        export PATH="$INSTALL_DIR:$PATH"
+        
+        # 尝试永久添加到shell配置文件
+        local shell_config=""
+        case "$SHELL" in
+            */bash)
+                if [ -f "$HOME/.bashrc" ]; then
+                    shell_config="$HOME/.bashrc"
+                elif [ -f "$HOME/.bash_profile" ]; then
+                    shell_config="$HOME/.bash_profile"
+                fi
+                ;;
+            */zsh)
+                if [ -f "$HOME/.zshrc" ]; then
+                    shell_config="$HOME/.zshrc"
+                fi
+                ;;
+            */fish)
+                if [ -d "$HOME/.config/fish" ]; then
+                    shell_config="$HOME/.config/fish/config.fish"
+                fi
+                ;;
+        esac
+        
+        if [ -n "$shell_config" ] && [ -w "$shell_config" ]; then
+            if ! grep -q "export PATH.*$INSTALL_DIR" "$shell_config" 2>/dev/null; then
+                echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> "$shell_config"
+                echo -e "${GREEN}✅ 已添加到 $shell_config${NC}"
+                path_updated=true
+            fi
+        fi
+    fi
+    
     # 刷新命令缓存
     if command -v hash >/dev/null 2>&1; then
         hash -r 2>/dev/null || true
@@ -282,14 +372,27 @@ install_sse() {
     # 检查安装是否成功
     if command -v sse >/dev/null 2>&1; then
         echo -e "${GREEN}🎉 安装完成！命令已可用${NC}"
+        # 验证功能
+        echo -e "${BLUE}🔍 验证安装...${NC}"
+        if sse config >/dev/null 2>&1; then
+            echo -e "${GREEN}✅ 功能验证成功${NC}"
+        else
+            echo -e "${YELLOW}⚠️  命令可用但可能需要配置API密钥${NC}"
+        fi
     else
         echo -e "${GREEN}🎉 安装完成！${NC}"
         echo -e "${YELLOW}💡 如果 'sse' 命令不可用，请尝试：${NC}"
-        echo -e "   # 刷新命令缓存："
-        echo -e "   hash -r"
-        echo -e "   # 或重新打开终端"
-        echo -e "   # 或手动执行："
-        echo -e "   $target_path --help"
+        if [ "$path_updated" = true ]; then
+            echo -e "   # 重新加载shell配置："
+            echo -e "   source $shell_config"
+            echo -e "   # 或重新打开终端"
+        else
+            echo -e "   # 刷新命令缓存："
+            echo -e "   hash -r"
+            echo -e "   # 或重新打开终端"
+            echo -e "   # 或手动执行："
+            echo -e "   $target_path --help"
+        fi
     fi
 
     # 显示使用说明
