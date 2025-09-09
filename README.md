@@ -39,6 +39,33 @@ curl -fsSL http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-
 curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts/install.sh | bash
 ```
 
+### 🚀 直接下载（无需等待CI构建）
+
+如果GitHub Actions构建排队，可以直接下载预构建的二进制文件：
+
+```bash
+# Linux AMD64 (推荐)
+curl -fsSL http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-client/main/dist/sse-linux-amd64 -o sse
+chmod +x sse && sudo mv sse /usr/local/bin/
+
+# 配置文件
+curl -fsSL http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-client/main/dist/sse-configs.tar.gz | tar -xz
+sudo mv sse-configs /usr/local/bin/
+
+# macOS ARM64 (Apple Silicon)
+curl -fsSL http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-client/main/dist/sse-darwin-arm64 -o sse
+chmod +x sse && sudo mv sse /usr/local/bin/
+
+# Windows AMD64 (PowerShell)
+Invoke-WebRequest -Uri "http://gh.cdn01.cn/https://raw.githubusercontent.com/randolph555/sse-client/main/dist/sse-windows-amd64.exe" -OutFile "sse.exe"
+```
+
+**预构建版本特点：**
+- ✅ 静态链接，解决GLIBC兼容性问题
+- ✅ 包含完整配置文件
+- ✅ 立即可用，无需等待CI构建
+- ✅ 与Release版本完全一致
+
 ### 手动安装
 
 1. 从 [Releases](https://github.com/randolph555/sse-client/releases) 下载对应平台的二进制文件
