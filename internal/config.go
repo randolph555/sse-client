@@ -122,7 +122,7 @@ func loadFromEnvironment() {
 			existingConfig, exists := config.Providers[provider]
 			if !exists {
 				existingConfig = ProviderConfig{
-					Models: getDefaultModels(provider),
+					Models: []string{}, // 空模型列表，等待从config.yaml加载
 				}
 			}
 
@@ -134,10 +134,8 @@ func loadFromEnvironment() {
 				existingConfig.BaseURL = baseURL
 			}
 
-			// 只有在完全没有模型配置时才使用默认模型
-			if len(existingConfig.Models) == 0 {
-				existingConfig.Models = getDefaultModels(provider)
-			}
+			// 注意：不再使用硬编码的默认模型
+			// 模型列表应该完全来自config.yaml文件
 
 			config.Providers[provider] = existingConfig
 		}
@@ -146,42 +144,14 @@ func loadFromEnvironment() {
 
 // 确保所有provider都有默认模型配置（即使没有API key）
 func ensureDefaultModels() {
+	// 如果config.yaml中已经有完整的provider配置，就不需要添加默认模型
+	// 这个函数现在主要用于确保providers map已初始化
 	if config.Providers == nil {
 		config.Providers = make(map[string]ProviderConfig)
 	}
 
-	providers := []string{"bailian", "openai", "google", "anthropic", "deepseek"}
-	for _, provider := range providers {
-		existingConfig, exists := config.Providers[provider]
-		if !exists {
-			// 创建默认配置，包含模型列表但没有API key
-			config.Providers[provider] = ProviderConfig{
-				Models: getDefaultModels(provider),
-			}
-		} else if len(existingConfig.Models) == 0 {
-			// 如果存在但没有模型列表，添加默认模型
-			existingConfig.Models = getDefaultModels(provider)
-			config.Providers[provider] = existingConfig
-		}
-	}
-}
-
-// 获取默认模型列表
-func getDefaultModels(provider string) []string {
-	switch provider {
-	case "bailian":
-		return []string{"qwen-max", "qwen-plus", "qwen-turbo", "qwen-vl-max", "qwen-vl-plus"}
-	case "openai":
-		return []string{"gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"}
-	case "google":
-		return []string{"gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.5-pro", "gemini-1.5-pro"}
-	case "anthropic":
-		return []string{"claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"}
-	case "deepseek":
-		return []string{"deepseek-chat", "deepseek-coder", "deepseek-reasoner"}
-	default:
-		return []string{}
-	}
+	// 注意：不再自动添加硬编码的默认模型
+	// 所有模型配置都应该来自config.yaml文件
 }
 
 func getProviderConfig(provider string) (ProviderConfig, bool) {
