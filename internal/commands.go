@@ -39,10 +39,17 @@ func ListModels(cmd *cobra.Command, args []string) {
 	fmt.Println("Available Models | 可用模型:")
 	fmt.Println()
 
-	providers := []string{"bailian", "openai", "google", "anthropic", "deepseek"}
-	for _, provider := range providers {
-		if cfg, exists := getProviderConfig(provider); exists && len(cfg.Models) > 0 {
-			fmt.Printf("📦 %s:\n", strings.ToUpper(provider))
+	// 动态获取所有已配置的 providers，而不是使用硬编码列表
+	if config == nil || config.Providers == nil || len(config.Providers) == 0 {
+		fmt.Println("❌ No providers configured or config.yaml not found")
+		fmt.Println("❌ 未配置提供商或未找到 config.yaml 文件")
+		return
+	}
+
+	// 遍历配置中的所有 providers
+	for provider, cfg := range config.Providers {
+		if len(cfg.Models) > 0 {
+			fmt.Printf("📦 %s (%d models):\n", strings.ToUpper(provider), len(cfg.Models))
 			for _, model := range cfg.Models {
 				fmt.Printf("  • %s\n", model)
 			}
