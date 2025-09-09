@@ -34,8 +34,8 @@ dist/
 # Environment files
 .env
 
-# Config files
-config.yaml
+# Config files (keep config.yaml for distribution, ignore user configs)
+# config.yaml
 
 # macOS specific
 .DS_Store
