@@ -340,3 +340,12 @@ curl -fsSL https://raw.githubusercontent.com/randolph555/sse-client/main/scripts
 - CI配置 (`.github/workflows/**`)
 
 文档更新（如README.md）不再触发不必要的构建，节省CI资源。
+
+
+## 📝 更新日志
+
+- 修复了Linux安装脚本路径问题
+- 优化了CI触发条件，避免文档更新触发构建
+- 两个安装脚本(install.sh和install-zh.sh)保持完全一致
+
+
