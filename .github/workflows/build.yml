@@ -13,6 +13,12 @@ on:
       - 'internal/**'
       - 'providers/**'
       - '.github/workflows/**'
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - 'scripts/install*.sh'
+      - 'scripts/uninstall.sh'
+      - '*.md'
   pull_request:
     branches: [ main ]
     paths:
@@ -25,6 +31,12 @@ on:
       - 'internal/**'
       - 'providers/**'
       - '.github/workflows/**'
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - 'scripts/install*.sh'
+      - 'scripts/uninstall.sh'
+      - '*.md'
 
 jobs:
   build:

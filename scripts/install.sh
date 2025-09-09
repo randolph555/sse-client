@@ -187,7 +187,7 @@ install_sse() {
                 source_file="$temp_dir/sse-${OS}-${ARCH}.exe"
             else
                 tar xzf "$archive_file"
-                # Unix系统下解压后的文件名
+                # Unix系统下解压后的文件名 - 解压后直接在当前目录
                 source_file="$temp_dir/sse-${OS}-${ARCH}"
             fi
             
