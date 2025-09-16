@@ -143,10 +143,8 @@ export GOOGLE_API_KEY="your-google-key"
 ### 配置管理命令
 ```bash
 sse config              # 查看当前配置状态
-sse env                 # 查看支持的环境变量
 sse list                # 列出所有支持的模型
 sse set default openai gpt-4o    # 设置默认模型
-sse test openai         # 测试提供商配置
 ```
 
 ## 🎨 高级用法
