@@ -27,6 +27,9 @@
 - 📖 **[完整使用指南](docs/SSE_CLIENT_GUIDE.md)** - 详细教程和高级功能
 - ⚡ **[实战案例集锦](docs/USAGE_EXAMPLES.md)** - 工具集成与应用案例
 
+
+[![asciicast](https://asciinema.org/a/zNuAQifusn89DE5HOWUaRODIR.svg)](https://asciinema.org/a/zNuAQifusn89DE5HOWUaRODIR)
+
 ## 🚀 快速安装
 
 ### 一键安装（推荐）
@@ -79,6 +82,9 @@ sse "解释量子计算"
 # 指定模型
 sse qwen-max "用中文解释机器学习"
 sse gpt-4o "Write a Python function"
+
+#添加自定义模型
+sse add bailian model qwen-max-latest
 
 # 指定提供商和模型
 sse bailian qwen-max "分析这个问题"
