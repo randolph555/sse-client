@@ -139,22 +139,6 @@ export ANTHROPIC_API_KEY="your-anthropic-key"
 export GOOGLE_API_KEY="your-google-key"
 ```
 
-### 高级配置（可选）
-如需自定义配置，可以使用配置文件：
-
-```bash
-# 方法1：环境变量文件（推荐）
-cp configs/.env.example .env
-# 编辑 .env 文件，然后: source .env
-
-# 方法2：YAML配置文件
-cp configs/config.example.yaml config.yaml
-# 编辑 config.yaml 文件
-```
-
-配置文件位置：
-- `./config.yaml` (项目目录)
-- `~/.config/sse-client/config.yaml` (用户目录)
 
 ### 配置管理命令
 ```bash
